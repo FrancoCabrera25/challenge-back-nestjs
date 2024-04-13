@@ -17,7 +17,7 @@ export class ProductSizesPipe implements PipeTransform<string, ProductSizes[]> {
     metadata: ArgumentMetadata,
   ): ProductSize[] {
     if (!value) {
-      return [ProductSize.MEDIUM, ProductSize.LARGE] as ProductSize[];
+      throw new BadRequestException('Not found sizes in query params');
     }
 
     if (typeof value === 'string') {

@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -19,27 +15,27 @@ export class ProductsService {
     private readonly categoryService: CategoriesService,
   ) {}
   async create(createProductDto: CreateProductDto) {
-    try {
-      const category = await this.categoryService.findOne(
-        createProductDto.categoryId,
-      );
-      const product = this.productRepository.create({
-        ...createProductDto,
-        category,
-      });
+    const category = await this.categoryService.findOne(
+      createProductDto.categoryId,
+    );
+    const product = this.productRepository.create({
+      ...createProductDto,
+      category,
+    });
 
-      return await this.productRepository.save(product);
-    } catch (error) {
-      throw new InternalServerErrorException('Error al insertar product');
-    }
+    return await this.productRepository.save(product);
   }
 
-  findAll() {
-    return this.productRepository.find({});
+  async findAll() {
+    const products = await this.productRepository.find({});
+
+    if (products.length !== 0) return products;
+
+    throw new NotFoundException(`Products not found`);
   }
 
-  findAllWithActiveCategory() {
-    return this.productRepository.find({
+  async findAllWithActiveCategory() {
+    const products = await this.productRepository.find({
       relations: {
         category: true,
       },
@@ -49,15 +45,30 @@ export class ProductsService {
         },
       },
     });
+
+    if (products.length !== 0) return products;
+
+    throw new NotFoundException(`Products not found`);
   }
 
   async findBySize(sizes: ProductSize[]) {
+    return await this.getProductBySize(sizes);
+  }
+  async findBySizesWithLargeAndMedium() {
+    return await this.getProductBySize([ProductSize.LARGE, ProductSize.MEDIUM]);
+  }
+
+  private async getProductBySize(sizes: ProductSize[]) {
     const queryBuilder = this.productRepository.createQueryBuilder('product');
-    return await queryBuilder
+    const sizesResult = await queryBuilder
       .where('size IN (:...sizes)', {
         sizes,
       })
       .getMany();
+
+    if (sizesResult.length !== 0) return sizesResult;
+
+    throw new NotFoundException(`Products not found`);
   }
 
   findOne(id: string) {
@@ -86,5 +97,10 @@ export class ProductsService {
     const product = await this.findOne(id);
 
     await this.productRepository.remove(product);
+  }
+
+  async removeAllProducts() {
+    const query = this.productRepository.createQueryBuilder('product');
+    return await query.delete().where({}).execute();
   }
 }

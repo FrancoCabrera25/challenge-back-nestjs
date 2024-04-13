@@ -3,9 +3,10 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  HttpException,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 export interface Response<T> {
   statusCode: number;
@@ -26,6 +27,18 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
           message: 'Success',
           data,
         };
+      }),
+      catchError((err) => {
+        return throwError(
+          () =>
+            new HttpException(
+              {
+                message: err?.message || err?.detail || 'Something went wrong',
+                status: err?.status || 500,
+              },
+              err.status || 500,
+            ),
+        );
       }),
     );
   }

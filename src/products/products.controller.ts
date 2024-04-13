@@ -36,8 +36,11 @@ export class ProductsController {
 
   @Get('size')
   findBySize(@Query('sizes', ProductSizesPipe) sizes: ProductSize[]) {
-    console.log('controler', sizes);
     return this.productsService.findBySize(sizes);
+  }
+  @Get('sizesWithLargeAndMedium')
+  findBySizesWithLargeAndMedium() {
+    return this.productsService.findBySizesWithLargeAndMedium();
   }
 
   @Get(':id')

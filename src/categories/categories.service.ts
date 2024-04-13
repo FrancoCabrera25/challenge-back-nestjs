@@ -21,16 +21,26 @@ export class CategoriesService {
 
       return await this.categoryRepository.save(category);
     } catch (error) {
-      throw new InternalServerErrorException('Error al insertar category');
+      throw new InternalServerErrorException(
+        'Ocurrio un error al crear la categoria',
+      );
     }
   }
 
-  findAll() {
-    return this.categoryRepository.find({});
+  async findAll() {
+    const categories = await this.categoryRepository.find({});
+
+    if (categories.length !== 0) return categories;
+
+    throw new NotFoundException(`Category not found `);
   }
 
-  findOne(id: string) {
-    return this.categoryRepository.findOneBy({ id });
+  async findOne(id: string) {
+    const category = await this.categoryRepository.findOneBy({ id });
+
+    if (category) return category;
+
+    throw new NotFoundException(`Category with id: ${id} not found `);
   }
 
   async update(id: string, updateCategoryDto: UpdateCategoryDto) {
@@ -39,10 +49,15 @@ export class CategoriesService {
       ...updateCategoryDto,
     });
 
-    if (!category) {
-      throw new NotFoundException(`Category with id: ${id} not found `);
+    if (category) {
+      return await this.categoryRepository.save(category);
     }
 
-    return await this.categoryRepository.save(category);
+    throw new NotFoundException(`Category with id: ${id} not found `);
+  }
+
+  async removeAllCategories() {
+    const query = this.categoryRepository.createQueryBuilder('category');
+    return await query.delete().where({}).execute();
   }
 }

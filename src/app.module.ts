@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
+import { FixturesModule } from './fixtures/fixtures.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -43,8 +42,9 @@ import { CategoriesModule } from './categories/categories.module';
     // }),
     ProductsModule,
     CategoriesModule,
+    FixturesModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
